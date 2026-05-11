@@ -3,9 +3,7 @@
 
 #include <stdint.h>
 
-// ==============================================
 // MENU STATE MACHINE
-// ==============================================
 
 typedef enum {
     MENU_STATE_HOME = 0,        // Main menu - select game
@@ -19,9 +17,7 @@ typedef struct {
     uint8_t selected_option;    // Which menu option is highlighted (0-2)
 } MenuSystem;
 
-// ==============================================
 // INITIALIZATION AND STATE MANAGEMENT
-// ==============================================
 
 /**
  * @brief Initialize the menu system
