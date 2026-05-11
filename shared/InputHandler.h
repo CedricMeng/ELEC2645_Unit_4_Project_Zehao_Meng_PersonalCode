@@ -3,19 +3,20 @@
 
 #include <stdint.h>
 
-// ========================================
 // INPUT SYSTEM - Simple State
-// ========================================
 
 /**
  * @brief Simple input state structure
- * 
+ *
  * Store the current input state. Main loop checks this to determine
  * what happened this frame.
  */
 typedef struct {
     uint8_t btn2_pressed;  // 1 if BT2 was pressed this frame, 0 otherwise
     uint8_t btn3_pressed;  // 1 if BT3 was pressed this frame, 0 otherwise
+    uint8_t btn6_pressed;  // 1 if BTN6 (PA7) was pressed this frame, 0 otherwise
+    uint8_t btn8_pressed;  // 1 if BTN8 (PC4) was pressed this frame, 0 otherwise
+    uint8_t btn9_pressed;  // 1 if BTN9 (PC5) was pressed this frame, 0 otherwise
 } InputState;
 
 // Global input state (read by menu/games in their Update functions)

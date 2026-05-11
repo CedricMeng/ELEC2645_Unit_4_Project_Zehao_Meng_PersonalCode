@@ -7,14 +7,23 @@ InputState current_input = {0};
 // Track button presses in interrupt
 static volatile uint8_t btn2_raw_press = 0;
 static volatile uint8_t btn3_raw_press = 0;
+static volatile uint8_t btn6_raw_press = 0;
+static volatile uint8_t btn8_raw_press = 0;
+static volatile uint8_t btn9_raw_press = 0;
 
 void Input_Init(void) {
     // GPIO and EXTI already initialized by MX_GPIO_Init() in main.c
     // Just reset the state
     current_input.btn2_pressed = 0;
     current_input.btn3_pressed = 0;
+    current_input.btn6_pressed = 0;
+    current_input.btn8_pressed = 0;
+    current_input.btn9_pressed = 0;
     btn2_raw_press = 0;
     btn3_raw_press = 0;
+    btn6_raw_press = 0;
+    btn8_raw_press = 0;
+    btn9_raw_press = 0;
 }
 
 void Input_Read(void) {
@@ -22,10 +31,16 @@ void Input_Read(void) {
     // This is read once per frame by the main loop
     current_input.btn2_pressed = btn2_raw_press;
     current_input.btn3_pressed = btn3_raw_press;
+    current_input.btn6_pressed = btn6_raw_press;
+    current_input.btn8_pressed = btn8_raw_press;
+    current_input.btn9_pressed = btn9_raw_press;
     
     // Reset the flags after reading so they only trigger once
     btn2_raw_press = 0;
     btn3_raw_press = 0;
+    btn6_raw_press = 0;
+    btn8_raw_press = 0;
+    btn9_raw_press = 0;
 }
 
 // ===== INTERRUPT CALLBACK FOR BUTTONS =====
@@ -33,6 +48,9 @@ void Input_Read(void) {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     static uint32_t last_btn2_interrupt = 0;
     static uint32_t last_btn3_interrupt = 0;
+    static uint32_t last_btn6_interrupt = 0;
+    static uint32_t last_btn8_interrupt = 0;
+    static uint32_t last_btn9_interrupt = 0;
     uint32_t current_time = HAL_GetTick();
     
     // Handle BT2
@@ -60,6 +78,39 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
             
             // Set flag indicating button was pressed
             btn3_raw_press = 1;
+        }
+    }
+
+    // Handle BTN6 (PA7) - Return to main menu
+    if (GPIO_Pin == BTN6_Pin) {
+        // Software debouncing (200ms)
+        if ((current_time - last_btn6_interrupt) > 200) {
+            last_btn6_interrupt = current_time;
+            
+            // Set flag indicating button was pressed
+            btn6_raw_press = 1;
+        }
+    }
+
+    // Handle BTN8 (PC4)
+    if (GPIO_Pin == BTN8_Pin) {
+        // Software debouncing (200ms)
+        if ((current_time - last_btn8_interrupt) > 200) {
+            last_btn8_interrupt = current_time;
+            
+            // Set flag indicating button was pressed
+            btn8_raw_press = 1;
+        }
+    }
+
+    // Handle BTN9 (PC5)
+    if (GPIO_Pin == BTN9_Pin) {
+        // Software debouncing (200ms)
+        if ((current_time - last_btn9_interrupt) > 200) {
+            last_btn9_interrupt = current_time;
+            
+            // Set flag indicating button was pressed
+            btn9_raw_press = 1;
         }
     }
 }
