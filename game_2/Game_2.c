@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// ===== 引用main.c中的全局变量 =====
+// ===== Reference global variables from main.c =====
 extern ST7789V2_cfg_t cfg0;
 extern Joystick_cfg_t joystick_cfg;
 extern Joystick_t joystick_data;
@@ -26,14 +26,14 @@ extern InputState current_input;
 extern PWM_cfg_t pwm_cfg;
 extern Buzzer_cfg_t buzzer_cfg;
 
-// ===== 第二个摇杆配置（用于射击控制） =====
+// ===== Second joystick configuration (for shooting control) =====
 static Joystick_cfg_t joystick2_cfg;
 static Joystick_t joystick2_data;
 
 // ===== UTILITY FUNCTIONS =====
 static uint16_t Random_U16(uint16_t max);
 
-// ===== 颜色定义 =====
+// ===== Color definitions =====
 #define COLOR_BG            0
 #define COLOR_PLAYER_BODY   4
 #define COLOR_PLAYER_BELT   1
@@ -45,7 +45,7 @@ static uint16_t Random_U16(uint16_t max);
 #define COLOR_MONSTER_VINE  3
 #define COLOR_MONSTER_FLOWER 2
 #define COLOR_MONSTER_EYE   6
-#define COLOR_COVER         7  // 白色掩体
+#define COLOR_COVER         7  // white cover
 #define COLOR_NINJA_CLOTH   0
 #define COLOR_NINJA_BELT    7
 #define COLOR_NINJA_SHOE    6
@@ -54,18 +54,18 @@ static uint16_t Random_U16(uint16_t max);
 #define COLOR_SAMURAI_HELM  2
 #define COLOR_SAMURAI_ACCENT 6
 #define COLOR_SAMURAI_BLADE 7
-#define COLOR_ENEMY_PROJECTILE 4  // 蓝色敌人弹丸
+#define COLOR_ENEMY_PROJECTILE 4  // blue enemy projectile
 #define COLOR_DRAGON_BODY   4
 #define COLOR_DRAGON_WING   3
 #define COLOR_DRAGON_EYE    6
 #define COLOR_DRAGON_HORN   5
 
-// LCD 参数
+// LCD parameters
 #define LCD_WIDTH 240
 #define LCD_HEIGHT 240
 #define PLAY_AREA_Y0 20
 
-// 对象大小
+// object sizes
 #define PLAYER_WIDTH    12
 #define PLAYER_HEIGHT   16
 #define PLAYER_COLLISION_RADIUS 7
@@ -87,7 +87,7 @@ static uint16_t Random_U16(uint16_t max);
 #define SAMURAI_COLLISION_RADIUS 10
 
 #define TARGET_RADIUS 4
-#define TARGET_COUNT 10  // 最多支持10个目标槽
+#define TARGET_COUNT 10  // support up to 10 target slots
 #define BOSS_COLLISION_RADIUS 28
 
 #define MOVE_SPEED 3
@@ -128,17 +128,17 @@ static uint16_t Random_U16(uint16_t max);
 
 #define MONSTER_DAMAGE 5
 #define SAMURAI_DAMAGE 15
-#define UI_LINE_Y 35  // UI横线位置
+#define UI_LINE_Y 35  // UI horizontal line position
 
-#define WIZARD_SHOOT_INTERVAL_MS 1000  // 法师射击间隔1秒
-#define NINJA_SHOOT_INTERVAL_MS 3000   // 忍者射击间隔3秒
-#define WIZARD_PROJECTILE_SPEED 2      // 法师弹丸速度较慢
-#define NINJA_PROJECTILE_SPEED 4       // 忍者弹丸速度
-#define TRIANGLE_PROJECTILE_SIZE 3     // 三角形弹丸大小
-#define BOSS_RANDOM_SHOOT_INTERVAL_MS 1500  // boss随机5方向射击间隔1.5秒
-#define BOSS_CROSS_SHOOT_INTERVAL_MS 5000   // boss十字方向射击间隔5秒
-#define BOSS_PROJECTILE_SPEED 3        // boss弹丸速度
-#define COLOR_BOSS_PROJECTILE 1        // 红色弹丸（使用红色）
+#define WIZARD_SHOOT_INTERVAL_MS 1000  // wizard shooting interval 1 second
+#define NINJA_SHOOT_INTERVAL_MS 3000   // ninja shooting interval 3 seconds
+#define WIZARD_PROJECTILE_SPEED 2      // wizard projectile speed (slower)
+#define NINJA_PROJECTILE_SPEED 4       // ninja projectile speed
+#define TRIANGLE_PROJECTILE_SIZE 3     // triangle projectile size
+#define BOSS_RANDOM_SHOOT_INTERVAL_MS 1500  // boss random 5-direction shooting interval 1.5 seconds
+#define BOSS_CROSS_SHOOT_INTERVAL_MS 5000   // boss cross-direction shooting interval 5 seconds
+#define BOSS_PROJECTILE_SPEED 3        // boss projectile speed
+#define COLOR_BOSS_PROJECTILE 1        // red projectile (using red)
 
 #define BOSS_TYPE_DRAGON 1
 #define BOSS_TYPE_KING   2
@@ -150,20 +150,20 @@ static uint16_t Random_U16(uint16_t max);
 #define KING_PROJECTILE_SPEED 1
 #define KING_PROJECTILE_DAMAGE 3
 
-// 弹丸结构体
+// Projectile structure
 typedef struct {
     uint16_t x, y;
     int16_t dx, dy;
     uint8_t active;
-    uint8_t is_enemy;      // 1=敌人弹丸, 0=玩家弹丸
-    uint8_t is_triangle;   // 1=三角形, 0=圆形
-    uint8_t is_boss;       // 1=boss弹丸, 0=普通敌人弹丸
-    uint8_t damage;        // 敌人弹丸伤害值
+    uint8_t is_enemy;      // 1=enemy projectile, 0=player projectile
+    uint8_t is_triangle;   // 1=triangle, 0=circle
+    uint8_t is_boss;       // 1=boss projectile, 0=normal enemy projectile
+    uint8_t damage;        // enemy projectile damage value
 } Projectile_t;
 
 #define MAX_PROJECTILES 8
 
-// 函数原型
+// Function prototypes
 uint8_t Circles_Overlap(uint16_t x1, uint16_t y1, uint16_t r1,
                         uint16_t x2, uint16_t y2, uint16_t r2);
 
@@ -225,9 +225,9 @@ static void Game2_Display_Intro(void)
   const uint8_t text_count = sizeof(full_text) / sizeof(full_text[0]);
   const uint8_t font_scale = 1;
   const uint8_t line_height = 10;
-  const int max_chars_per_line = 28; // 减少到28以确保不超出
+  const int max_chars_per_line = 28; // reduced to 28 to ensure it does not exceed the screen
 
-  // 计算总行数（包括换行后的行）
+  // Calculate total number of lines (including lines after word wrapping)
   uint8_t total_lines = 0;
   for (uint8_t i = 0; i < text_count; i++) {
     const char *line = full_text[i];
@@ -235,7 +235,7 @@ static void Game2_Display_Intro(void)
     if (line_len == 0) {
       total_lines += 1;
     } else {
-      int lines_needed = (line_len + max_chars_per_line - 1) / max_chars_per_line; // 向上取整
+      int lines_needed = (line_len + max_chars_per_line - 1) / max_chars_per_line; // round up
       total_lines += lines_needed;
     }
   }
@@ -254,14 +254,14 @@ static void Game2_Display_Intro(void)
         continue;
       }
       
-      // 处理换行
+      // Handle line wrapping
       int pos = 0;
       while (pos < line_len) {
         char display_line[50];
         int remaining = line_len - pos;
         int take = (remaining > max_chars_per_line) ? max_chars_per_line : remaining;
         
-        // 尝试在单词边界分割
+        // Try to split at word boundary
         if (take < remaining) {
           int split_pos = take;
           while (split_pos > 0 && line[pos + split_pos] != ' ') {
@@ -275,7 +275,7 @@ static void Game2_Display_Intro(void)
         strncpy(display_line, line + pos, take);
         display_line[take] = '\0';
         
-        // 去掉末尾空格
+        // Remove trailing spaces
         int display_len = strlen(display_line);
         while (display_len > 0 && display_line[display_len - 1] == ' ') {
           display_line[--display_len] = '\0';
@@ -287,7 +287,7 @@ static void Game2_Display_Intro(void)
         y += line_height;
         pos += take;
         
-        // 跳过空格
+        // Skip spaces
         while (pos < line_len && line[pos] == ' ') {
           pos++;
         }
@@ -323,29 +323,29 @@ static void Game2_Show_Story_Chapter(const char *lines[])
     const char *line = lines[i];
     int line_len = strlen(line);
     
-    // 如果这行是空行，直接显示并跳过
+    // If this line is empty, display it and skip
     if (line_len == 0) {
       y += 14;
       continue;
     }
     
-    // 处理长行：分割为多个短行
+    // Process long lines: split into multiple short lines
     int pos = 0;
     while (pos < line_len) {
       char display_line[50];
       int remaining = line_len - pos;
       int take = (remaining > max_chars_per_line) ? max_chars_per_line : remaining;
       
-      // 如果需要分割，尝试在单词边界处分割
+      // If splitting is needed, try to split at word boundary
       if (take < remaining && take < line_len) {
-        // 从 take 位置向前找空格
+        // Search backward from take position for a space
         int split_pos = take;
         while (split_pos > 0 && line[pos + split_pos] != ' ') {
           split_pos--;
         }
         if (split_pos > 0) {
           take = split_pos;
-          // 跳过空格
+          // Skip spaces
           while (pos + take < line_len && line[pos + take] == ' ') {
             take++;
           }
@@ -355,7 +355,7 @@ static void Game2_Show_Story_Chapter(const char *lines[])
       strncpy(display_line, line + pos, take);
       display_line[take] = '\0';
       
-      // 去掉末尾空格
+      // Remove trailing spaces
       int display_len = strlen(display_line);
       while (display_len > 0 && display_line[display_len - 1] == ' ') {
         display_line[--display_len] = '\0';
@@ -367,7 +367,7 @@ static void Game2_Show_Story_Chapter(const char *lines[])
       }
       
       pos += take;
-      // 跳过多余的空格
+      // Skip extra spaces
       while (pos < line_len && line[pos] == ' ') {
         pos++;
       }
@@ -382,7 +382,7 @@ static void Game2_Show_Story_Chapter(const char *lines[])
 
 static void Game2_Wait_For_Story_Advance(void)
 {
-  // 等待先释放摇杆
+  // Wait for joystick release first
   while (1) {
     Input_Read();
     Joystick_Read(&joystick_cfg, &joystick_data);
@@ -392,7 +392,7 @@ static void Game2_Wait_For_Story_Advance(void)
     }
     HAL_Delay(20);
   }
-  // 等待双摇杆同时大幅移动
+  // Wait for both joysticks to move significantly at the same time
   while (1) {
     Input_Read();
     Joystick_Read(&joystick_cfg, &joystick_data);
@@ -499,7 +499,7 @@ static void Game2_Redraw_Game_State(uint16_t player_x, uint16_t player_y,
     if (!projectiles[i].active) continue;
     uint8_t proj_color = COLOR_ENEMY_PROJECTILE;
     if (projectiles[i].is_boss) {
-      proj_color = COLOR_BOSS_PROJECTILE;  // 红色
+      proj_color = COLOR_BOSS_PROJECTILE;  // red
     }
     if (projectiles[i].is_triangle) {
       LCD_Draw_Triangle(projectiles[i].x, projectiles[i].y, TRIANGLE_PROJECTILE_SIZE, proj_color, 0);
@@ -513,15 +513,15 @@ static void Game2_Redraw_Game_State(uint16_t player_x, uint16_t player_y,
   LCD_Refresh(&cfg0);
 }
 
-// ===== Game2_Run 函数 =====
+// ===== Game2_Run function =====
 MenuState Game2_Run(void)
 {
-  // 开启背光
+  // Turn on backlight
   gpio_write(cfg0.BL, 1);
 
   LCD_Fill_Buffer(0);
   
-  // 绘制UI界面：显示分数和血量
+  // Draw UI: display score and HP
   uint16_t score = 0;
   uint8_t story_stage = 0; // 0=none,1=first story shown,2=second story shown
   static const char *story1[] = {
@@ -684,9 +684,9 @@ MenuState Game2_Run(void)
 
   LCD_printString("Score: 0", 10, 10, 1, 2);
   LCD_printString("HP: 100", 160, 10, 1, 2);
-  LCD_Draw_Line(0, UI_LINE_Y, LCD_WIDTH-1, UI_LINE_Y, 1);  // 白色横线
+  LCD_Draw_Line(0, UI_LINE_Y, LCD_WIDTH-1, UI_LINE_Y, 1);  // white horizontal line
 
-  // 初始化第二个摇杆用于射击控制
+  // Initialize the second joystick for shooting control
   joystick2_cfg = (Joystick_cfg_t){
     .adc = &hadc1,
     .x_channel = ADC_CHANNEL_5,
@@ -713,10 +713,10 @@ MenuState Game2_Run(void)
   float player_shot_speed_mult = 1.0f;
   uint32_t player_shot_interval_ms = PLAYER_BASE_SHOT_INTERVAL_MS;
 
-  // 持续伤害状态
-  uint8_t damage_from_monster = 0;  // 是否正在受到触手怪伤害
-  uint8_t damage_from_samurai = 0;  // 是否正在受到武士伤害
-  uint32_t last_damage_tick = 0;    // 上次受到持续伤害的时间
+  // Continuous damage status
+  uint8_t damage_from_monster = 0;  // whether currently taking damage from tentacle monster
+  uint8_t damage_from_samurai = 0;  // whether currently taking damage from samurai
+  uint32_t last_damage_tick = 0;    // time of last continuous damage
 
   uint16_t target_x[TARGET_COUNT] = {0};
   uint16_t target_y[TARGET_COUNT] = {0};
@@ -725,7 +725,7 @@ MenuState Game2_Run(void)
   uint8_t is_ninja[TARGET_COUNT] = {0};
   uint8_t is_samurai[TARGET_COUNT] = {0};
   uint8_t target_hp[TARGET_COUNT] = {0};
-  uint8_t active_enemies = 0;  // 当前活跃敌人数量
+  uint8_t active_enemies = 0;  // current number of active enemies
 
   uint8_t drop_active[MAX_DROPS] = {0};
   uint16_t drop_x[MAX_DROPS] = {0};
@@ -744,7 +744,7 @@ MenuState Game2_Run(void)
   uint32_t last_king_damage_tick = 0;
   uint32_t last_king_move_tick = 0;
 
-  // 初始化敌人：随机放置 3 到 5 个敌人
+  // Initialize enemies: randomly place 3 to 5 enemies
   uint8_t initial_enemies = 3 + Random_U16(3);  // 3-5
   for (uint8_t i = 0; i < initial_enemies; i++) {
     uint8_t dummy = 0;
@@ -759,9 +759,9 @@ MenuState Game2_Run(void)
 
   uint32_t last_move_tick = HAL_GetTick();
   uint32_t last_enemy_move_tick = HAL_GetTick();
-  uint32_t last_spawn_tick = HAL_GetTick();  // 敌人刷新定时器
-  uint32_t last_spawn_accel_tick = HAL_GetTick();  // 刷新速度加速定时器
-  uint32_t last_enemy_limit_tick = HAL_GetTick();  // 敌方单位最大上限增长定时器
+  uint32_t last_spawn_tick = HAL_GetTick();  // enemy spawn timer
+  uint32_t last_spawn_accel_tick = HAL_GetTick();  // spawn speed acceleration timer
+  uint32_t last_enemy_limit_tick = HAL_GetTick();  // enemy unit maximum limit growth timer
   uint32_t last_wizard_shoot_tick = HAL_GetTick();
   uint32_t last_ninja_shoot_tick = HAL_GetTick();
   uint32_t spawn_interval_ms = INITIAL_SPAWN_INTERVAL_MS;
@@ -770,35 +770,35 @@ MenuState Game2_Run(void)
 
   Projectile_t projectiles[MAX_PROJECTILES] = {0};
   
-  // LED闪烁控制
+  // LED flash control
   static uint32_t muzzle_led_off_tick = 0;
 
   while (1) {
-    // 检查是否按下BT3退出游戏
+    // Check if BT3 is pressed to exit the game
     Input_Read();
     if (current_input.btn3_pressed) {
       return MENU_STATE_HOME;
     }
 
-    // 检查血量是否为0，游戏结束
+    // Check if HP is 0, game over
     if (player_hp <= 0) {
-      // 清除屏幕中所有显示
+      // Clear all displayed objects on screen
       LCD_Fill_Buffer(0);
-      // 在屏幕中央显示GAME OVER，字体较大
+      // Display GAME OVER in the center of the screen with larger font
       LCD_printString("GAME OVER", 70, 120, 1, 3);
       LCD_Refresh(&cfg0);
-      // 短暂延迟让玩家看到
+      // Short delay so the player can see it
       HAL_Delay(2000);
       return MENU_STATE_HOME;
     }
 
-    // 保持背光开启
+    // Keep backlight on
     gpio_write(cfg0.BL, 1);
 
-    // 读取第一个摇杆（移动控制）
+    // Read first joystick (movement control)
     Joystick_Read(&joystick_cfg, &joystick_data);
     
-    // 读取第二个摇杆（射击控制）
+    // Read second joystick (shooting control)
     Joystick_Read(&joystick2_cfg, &joystick2_data);
 
     uint32_t now = HAL_GetTick();
@@ -823,7 +823,7 @@ MenuState Game2_Run(void)
         if (ny < UI_LINE_Y + PLAYER_HEIGHT/2) ny = UI_LINE_Y + PLAYER_HEIGHT/2;
         if (ny > LCD_HEIGHT - PLAYER_HEIGHT/2 - 1) ny = LCD_HEIGHT - PLAYER_HEIGHT/2 - 1;
 
-        // 检查与敌方单位的碰撞
+        // Check collision with enemy units
         uint8_t can_move = 1;
         for (uint8_t i = 0; i < TARGET_COUNT; i++) {
           if (is_wizard[i] || is_monster[i] || is_ninja[i] || is_samurai[i]) {
@@ -833,7 +833,7 @@ MenuState Game2_Run(void)
                         SAMURAI_COLLISION_RADIUS;
             if (Circles_Overlap(nx, ny, PLAYER_COLLISION_RADIUS, target_x[i], target_y[i], r)) {
               can_move = 0;
-              // 设置持续伤害状态
+              // Set continuous damage status
               if (is_monster[i]) {
                 damage_from_monster = 1;
               } else if (is_samurai[i]) {
@@ -852,9 +852,9 @@ MenuState Game2_Run(void)
       last_move_tick = now;
     }
 
-    // 检查持续伤害
+    // Check continuous damage
     if (damage_from_monster || damage_from_samurai) {
-      if ((now - last_damage_tick) >= 1000) {  // 每隔1秒
+      if ((now - last_damage_tick) >= 1000) {  // every 1 second
         if (damage_from_monster) {
           if (player_hp >= 5) player_hp -= 5;
           else player_hp = 0;
@@ -866,11 +866,11 @@ MenuState Game2_Run(void)
       }
     }
 
-    // 重置持续伤害状态（需要每帧检查是否还在碰撞）
+    // Reset continuous damage status (must check every frame whether still colliding)
     damage_from_monster = 0;
     damage_from_samurai = 0;
 
-    // 检查当前是否还在与敌人碰撞（用于持续伤害）
+    // Check if currently colliding with any enemy (for continuous damage)
     for (uint8_t i = 0; i < TARGET_COUNT; i++) {
       if (is_wizard[i] || is_monster[i] || is_ninja[i] || is_samurai[i]) {
         uint8_t r = is_wizard[i] ? WIZARD_COLLISION_RADIUS :
@@ -893,11 +893,11 @@ MenuState Game2_Run(void)
       last_enemy_move_tick = now;
     }
 
-    // 敌人射击逻辑
+    // Enemy shooting logic
     if ((now - last_wizard_shoot_tick) >= WIZARD_SHOOT_INTERVAL_MS) {
       for (uint8_t i = 0; i < TARGET_COUNT; i++) {
         if (is_wizard[i]) {
-          Shoot_Enemy_Projectile(target_x[i], target_y[i], player_x, player_y, 0, projectiles);  // 圆形弹丸
+          Shoot_Enemy_Projectile(target_x[i], target_y[i], player_x, player_y, 0, projectiles);  // circular projectile
         }
       }
       last_wizard_shoot_tick = now;
@@ -906,31 +906,31 @@ MenuState Game2_Run(void)
     if ((now - last_ninja_shoot_tick) >= NINJA_SHOOT_INTERVAL_MS) {
       for (uint8_t i = 0; i < TARGET_COUNT; i++) {
         if (is_ninja[i]) {
-          Shoot_Enemy_Projectile(target_x[i], target_y[i], player_x, player_y, 1, projectiles);  // 三角形扇形弹丸
+          Shoot_Enemy_Projectile(target_x[i], target_y[i], player_x, player_y, 1, projectiles);  // triangular fan projectile
         }
       }
       last_ninja_shoot_tick = now;
     }
 
-    // 使用第二个摇杆控制射击
+    // Use second joystick to control shooting
     if (joystick2_data.magnitude > 0.3f) {
       uint8_t shot_fired = Shoot_Projectile(player_x, player_y, joystick2_data.direction, projectiles, player_shot_interval_ms);
       
-      // LED闪烁：当射击时点亮LED，设置定时器
+      // LED flash: light LED when shooting, set timer
       if (shot_fired) {
-        uint32_t flash_duty = 50u;  // 默认闪烁亮度
-        uint32_t flash_ms = 30u;    // 默认闪烁时间
+        uint32_t flash_duty = 50u;  // default flash brightness
+        uint32_t flash_ms = 30u;    // default flash duration
         PWM_SetDuty(&pwm_cfg, flash_duty);
         muzzle_led_off_tick = now + flash_ms;
       }
     }
 
-    // Boss射击逻辑
+    // Boss shooting logic
     if (boss_active && boss_type == BOSS_TYPE_DRAGON) {
-      // 每隔1.5秒发射5枚随机方向伤害为10的圆形弹丸
+      // Every 1.5 seconds fire 5 randomly directed circular projectiles with 10 damage
       if ((now - last_boss_random_shoot_tick) >= BOSS_RANDOM_SHOOT_INTERVAL_MS) {
         for (uint8_t i = 0; i < 5; i++) {
-          uint8_t random_dir = Random_U16(8);  // 0-7 方向
+          uint8_t random_dir = Random_U16(8);  // 0-7 directions
           int16_t dx = 0, dy = 0;
           switch (random_dir) {
             case N:  dy = -BOSS_PROJECTILE_SPEED; break;
@@ -960,9 +960,9 @@ MenuState Game2_Run(void)
         last_boss_random_shoot_tick = now;
       }
 
-      // 每隔5秒向十字方向（上下左右）发射连续三枚伤害为5的三角形弹丸
+      // Every 5 seconds fire 3 consecutive triangular projectiles in cross directions (up/down/left/right) with 5 damage
       if ((now - last_boss_cross_shoot_tick) >= BOSS_CROSS_SHOOT_INTERVAL_MS) {
-        uint8_t cross_dirs[] = {N, S, E, W};  // 上下左右
+        uint8_t cross_dirs[] = {N, S, E, W};  // up down left right
         for (uint8_t dir = 0; dir < 4; dir++) {
           for (uint8_t count = 0; count < 3; count++) {
             int16_t dx = 0, dy = 0;
@@ -992,9 +992,9 @@ MenuState Game2_Run(void)
       }
     }
 
-    // 国王逻辑
+    // King logic
     if (boss_active && boss_type == BOSS_TYPE_KING) {
-      // 国王每秒发射三颗弹丸（像忍者一样）
+      // King fires three projectiles every second (like ninja)
       if ((now - last_king_shoot_tick) >= KING_SHOOT_INTERVAL_MS) {
         int16_t dx = (int16_t)player_x - (int16_t)boss_x;
         int16_t dy = (int16_t)player_y - (int16_t)boss_y;
@@ -1003,7 +1003,7 @@ MenuState Game2_Run(void)
           float ndx = dx / dist;
           float ndy = dy / dist;
           
-          // 发射三颗弹丸：左、中、右
+          // Fire three projectiles: left, center, right
           float angles[3] = {-0.3f, 0.0f, 0.3f};
           for (int i = 0; i < 3; i++) {
             float cos_a = cosf(angles[i]);
@@ -1035,7 +1035,7 @@ MenuState Game2_Run(void)
       }
     }
 
-    // 每10秒加快刷新速度
+    // Accelerate spawn speed every 10 seconds
     if ((now - last_spawn_accel_tick) >= SPAWN_ACCELERATION_PERIOD_MS) {
       if (spawn_interval_ms > MIN_SPAWN_INTERVAL_MS) {
         spawn_interval_ms -= (spawn_interval_ms - MIN_SPAWN_INTERVAL_MS > SPAWN_ACCELERATION_STEP_MS)
@@ -1045,13 +1045,13 @@ MenuState Game2_Run(void)
       last_spawn_accel_tick = now;
     }
 
-    // 每30秒提升敌方单位上限，直到上限为10个
+    // Increase enemy unit limit every 30 seconds until it reaches 10
     if (!boss_active && (now - last_enemy_limit_tick) >= ENEMY_MAX_INCREASE_PERIOD_MS && enemy_max_limit < ENEMY_MAX_LIMIT_CAP) {
       enemy_max_limit++;
       last_enemy_limit_tick = now;
     }
 
-    // 敌人刷新逻辑：按当前上限和当前刷新间隔生成敌人
+    // Enemy spawn logic: spawn according to current limit and current spawn interval
     if ((now - last_spawn_tick) >= spawn_interval_ms && active_enemies < enemy_max_limit) {
       uint8_t spawn_attempts = enemy_max_limit - active_enemies;
       for (uint8_t attempt = 0; attempt < spawn_attempts; attempt++) {
@@ -1251,7 +1251,7 @@ MenuState Game2_Run(void)
       prev_x = player_x;
       prev_y = player_y;
       
-      // 如果boss是国王，初始化国王的定时器
+      // If the boss is the king, initialize king's timers
       if (boss_type == BOSS_TYPE_KING) {
         last_king_move_tick = 0;
         last_king_shoot_tick = 0;
@@ -1306,10 +1306,10 @@ MenuState Game2_Run(void)
       prev_y = player_y;
     }
 
-    // 更新分数和血量显示
-    // 先擦除旧的顶部显示区域
-    LCD_Draw_Rect(0, 10, 150, 16, COLOR_BG, 1);  // 擦除左上角分数区域
-    LCD_Draw_Rect(160, 10, 80, 16, COLOR_BG, 1);  // 擦除右上角血量区域
+    // Update score and HP display
+    // First erase the old top display area
+    LCD_Draw_Rect(0, 10, 150, 16, COLOR_BG, 1);  // erase left-top score area
+    LCD_Draw_Rect(160, 10, 80, 16, COLOR_BG, 1);  // erase right-top HP area
     char score_str[20];
     char hp_str[16];
     sprintf(score_str, "Score: %d", score);
@@ -1317,7 +1317,7 @@ MenuState Game2_Run(void)
     LCD_printString(score_str, 10, 10, 1, 2);
     LCD_printString(hp_str, 160, 10, 1, 2);
 
-    // LED闪烁处理：检查是否需要关闭LED
+    // LED flash handling: check if LED should be turned off
     if (muzzle_led_off_tick != 0u && now >= muzzle_led_off_tick) {
       PWM_SetDuty(&pwm_cfg, 0);
       muzzle_led_off_tick = 0u;
@@ -1328,10 +1328,10 @@ MenuState Game2_Run(void)
   return MENU_STATE_HOME;
 }
 
-// ===== 发射弹丸 =====
+// ===== Shoot projectile =====
 uint8_t Shoot_Projectile(uint16_t player_x, uint16_t player_y, uint8_t direction, Projectile_t *projs, uint32_t shoot_interval_ms) {
   static uint32_t last_shot = 0;
-  if (HAL_GetTick() - last_shot < shoot_interval_ms) return 0;  // 优化：减少射击间隔
+  if (HAL_GetTick() - last_shot < shoot_interval_ms) return 0;  // optimization: reduce shooting interval
   last_shot = HAL_GetTick();
 
   int16_t dx = 0, dy = 0;
@@ -1353,36 +1353,36 @@ uint8_t Shoot_Projectile(uint16_t player_x, uint16_t player_y, uint8_t direction
       projs[i].dx = dx;
       projs[i].dy = dy;
       projs[i].active = 1;
-      projs[i].is_enemy = 0;  // 玩家弹丸
-      projs[i].is_triangle = 0;  // 圆形
+      projs[i].is_enemy = 0;  // player projectile
+      projs[i].is_triangle = 0;  // circle
       projs[i].is_boss = 0;
       projs[i].damage = 0;
-      // 射击蜂鸣器短鸣
+      // Short buzzer tone for shooting
       buzzer_tone(&buzzer_cfg, 400u, 45u);
       HAL_Delay(25u);
       buzzer_off(&buzzer_cfg);
-      return 1;  // 成功射击
+      return 1;  // shot fired successfully
     }
   }
-  return 0;  // 没有可用的弹丸槽
+  return 0;  // no available projectile slot
 }
 
-// ===== 发射敌人弹丸 =====
+// ===== Shoot enemy projectile =====
 void Shoot_Enemy_Projectile(uint16_t enemy_x, uint16_t enemy_y, uint16_t player_x, uint16_t player_y, uint8_t is_fan, Projectile_t *projs) {
-  // 计算方向向量
+  // Calculate direction vector
   int16_t dx = (int16_t)player_x - (int16_t)enemy_x;
   int16_t dy = (int16_t)player_y - (int16_t)enemy_y;
 
-  // 归一化方向向量
+  // Normalize direction vector
   float dist = sqrtf(dx * dx + dy * dy);
-  if (dist == 0) return;  // 避免除零
+  if (dist == 0) return;  // avoid division by zero
 
   float ndx = dx / dist;
   float ndy = dy / dist;
 
   if (is_fan) {
-    // 忍者：扇形三枚三角形弹丸
-    float angles[3] = {-0.3f, 0.0f, 0.3f};  // 左右各15度
+    // Ninja: three triangular projectiles in fan shape
+    float angles[3] = {-0.3f, 0.0f, 0.3f};  // ±15 degrees left/right
     float spawn_dist = NINJA_COLLISION_RADIUS + TRIANGLE_PROJECTILE_SIZE + 1.0f;
     for (int i = 0; i < 3; i++) {
       float cos_a = cosf(angles[i]);
@@ -1407,8 +1407,8 @@ void Shoot_Enemy_Projectile(uint16_t enemy_x, uint16_t enemy_y, uint16_t player_
             projs[j].dy = (rot_dy > 0) ? 1 : (rot_dy < 0) ? -1 : 0;
           }
           projs[j].active = 1;
-          projs[j].is_enemy = 1;  // 敌人弹丸
-          projs[j].is_triangle = 1;  // 三角形
+          projs[j].is_enemy = 1;  // enemy projectile
+          projs[j].is_triangle = 1;  // triangle
           projs[j].is_boss = 0;
           projs[j].damage = 4;
           break;
@@ -1416,7 +1416,7 @@ void Shoot_Enemy_Projectile(uint16_t enemy_x, uint16_t enemy_y, uint16_t player_
       }
     }
   } else {
-    // 法师：单个圆形弹丸
+    // Wizard: single circular projectile
     float spawn_dist = WIZARD_COLLISION_RADIUS + PROJECTILE_RADIUS + 1.0f;
     float start_x = enemy_x + ndx * spawn_dist;
     float start_y = enemy_y + ndy * spawn_dist;
@@ -1431,8 +1431,8 @@ void Shoot_Enemy_Projectile(uint16_t enemy_x, uint16_t enemy_y, uint16_t player_
           projs[i].dy = (ndy > 0) ? 1 : (ndy < 0) ? -1 : 0;
         }
         projs[i].active = 1;
-        projs[i].is_enemy = 1;  // 敌人弹丸
-        projs[i].is_triangle = 0;  // 圆形
+        projs[i].is_enemy = 1;  // enemy projectile
+        projs[i].is_triangle = 0;  // circle
         projs[i].is_boss = 0;
         projs[i].damage = 10;
         break;
@@ -1464,45 +1464,45 @@ static void LCD_Draw_Dragon(uint16_t x, uint16_t y, uint8_t erase)
         return;
     }
 
-    // 1. 主躯干（红色厚重身体）
-    LCD_Draw_Rect(x - 24, y - 12, 48, 22, COLOR_DRAGON_BODY, 1);     // 主体
+    // 1. Main body (thick red body)
+    LCD_Draw_Rect(x - 24, y - 12, 48, 22, COLOR_DRAGON_BODY, 1);     // main body
 
-    // 2. 头部（更大更凶猛）
-    LCD_Draw_Rect(x - 34, y - 22, 18, 16, COLOR_DRAGON_BODY, 1);     // 头部底色
+    // 2. Head (larger and more fierce)
+    LCD_Draw_Rect(x - 34, y - 22, 18, 16, COLOR_DRAGON_BODY, 1);     // head base color
 
-    // 3. 红色头冠/背棘（增强红色巨龙气势）
-    LCD_Draw_Rect(x - 32, y - 28, 12, 8, COLOR_SAMURAI_ARMOR, 1);    // 红色头冠
+    // 3. Red crest / dorsal spines (enhance red dragon presence)
+    LCD_Draw_Rect(x - 32, y - 28, 12, 8, COLOR_SAMURAI_ARMOR, 1);    // red crest
     LCD_Draw_Rect(x - 20, y - 26, 6, 6, COLOR_SAMURAI_ARMOR, 1);
 
-    // 4. 眼睛（凶恶黄色/橙色眼睛）
-    LCD_Draw_Rect(x - 29, y - 18, 4, 4, COLOR_DRAGON_EYE, 1);        // 左眼
-    LCD_Draw_Rect(x - 19, y - 18, 4, 4, COLOR_DRAGON_EYE, 1);        // 右眼
+    // 4. Eyes (fierce yellow/orange eyes)
+    LCD_Draw_Rect(x - 29, y - 18, 4, 4, COLOR_DRAGON_EYE, 1);        // left eye
+    LCD_Draw_Rect(x - 19, y - 18, 4, 4, COLOR_DRAGON_EYE, 1);        // right eye
 
-    // 5. 尖角（黄色/亮色装饰）
-    LCD_Draw_Rect(x - 36, y - 26, 3, 8, COLOR_DRAGON_HORN, 1);       // 左大角
-    LCD_Draw_Rect(x - 12, y - 27, 3, 7, COLOR_DRAGON_HORN, 1);       // 右角
+    // 5. Sharp horns (yellow/bright decoration)
+    LCD_Draw_Rect(x - 36, y - 26, 3, 8, COLOR_DRAGON_HORN, 1);       // left big horn
+    LCD_Draw_Rect(x - 12, y - 27, 3, 7, COLOR_DRAGON_HORN, 1);       // right horn
 
-    // 6. 翅膀（红色偏暗 + 黄色翼膜边缘，增加层次感）
-    LCD_Draw_Rect(x - 30, y - 16, 14, 18, COLOR_MONSTER_VINE, 1);    // 左翼主体（较暗）
-    LCD_Draw_Rect(x + 16, y - 16, 14, 18, COLOR_MONSTER_VINE, 1);    // 右翼主体
-    LCD_Draw_Rect(x - 28, y - 14, 10, 12, COLOR_SAMURAI_ACCENT, 1);  // 左翼亮边
-    LCD_Draw_Rect(x + 18, y - 14, 10, 12, COLOR_SAMURAI_ACCENT, 1);  // 右翼亮边
+    // 6. Wings (dark red + yellow wing membrane edges, add layers)
+    LCD_Draw_Rect(x - 30, y - 16, 14, 18, COLOR_MONSTER_VINE, 1);    // left wing body (darker)
+    LCD_Draw_Rect(x + 16, y - 16, 14, 18, COLOR_MONSTER_VINE, 1);    // right wing body
+    LCD_Draw_Rect(x - 28, y - 14, 10, 12, COLOR_SAMURAI_ACCENT, 1);  // left wing bright edge
+    LCD_Draw_Rect(x + 18, y - 14, 10, 12, COLOR_SAMURAI_ACCENT, 1);  // right wing bright edge
 
-    // 7. 腿部（粗壮有力）
-    LCD_Draw_Rect(x - 20, y + 8, 7, 12, COLOR_DRAGON_BODY, 1);       // 左前腿
-    LCD_Draw_Rect(x - 6,  y + 8, 7, 12, COLOR_DRAGON_BODY, 1);       // 右前腿
-    LCD_Draw_Rect(x + 8,  y + 10, 6, 10, COLOR_DRAGON_BODY, 1);      // 左后腿
-    LCD_Draw_Rect(x + 18, y + 10, 6, 10, COLOR_DRAGON_BODY, 1);      // 右后腿
+    // 7. Legs (sturdy and powerful)
+    LCD_Draw_Rect(x - 20, y + 8, 7, 12, COLOR_DRAGON_BODY, 1);       // left front leg
+    LCD_Draw_Rect(x - 6,  y + 8, 7, 12, COLOR_DRAGON_BODY, 1);       // right front leg
+    LCD_Draw_Rect(x + 8,  y + 10, 6, 10, COLOR_DRAGON_BODY, 1);      // left rear leg
+    LCD_Draw_Rect(x + 18, y + 10, 6, 10, COLOR_DRAGON_BODY, 1);      // right rear leg
 
-    // 8. 尾巴（粗长，带尖刺）
-    LCD_Draw_Rect(x + 22, y - 6, 18, 10, COLOR_DRAGON_BODY, 1);      // 尾巴主体
-    LCD_Draw_Rect(x + 36, y - 8, 6, 6, COLOR_DRAGON_BODY, 1);        // 尾巴尖端加粗
+    // 8. Tail (thick and long with spikes)
+    LCD_Draw_Rect(x + 22, y - 6, 18, 10, COLOR_DRAGON_BODY, 1);      // tail body
+    LCD_Draw_Rect(x + 36, y - 8, 6, 6, COLOR_DRAGON_BODY, 1);        // tail tip thickened
 
-    // 9. 尾巴尖刺（增加威慑力）
+    // 9. Tail spikes (increase intimidation)
     LCD_Draw_Rect(x + 34, y - 10, 3, 4, COLOR_SAMURAI_ARMOR, 1);
 
-    // 10. 额外红色细节（腹部亮色或纹路）
-    LCD_Draw_Rect(x - 18, y - 8, 36, 6, COLOR_SAMURAI_ACCENT, 1);    // 腹部亮色条纹
+    // 10. Extra red details (bright belly stripes or patterns)
+    LCD_Draw_Rect(x - 18, y - 8, 36, 6, COLOR_SAMURAI_ACCENT, 1);    // belly bright stripe
 }
 
 static void Spawn_Drop(uint16_t x, uint16_t y, uint8_t *drop_active, uint16_t *drop_x, uint16_t *drop_y, uint8_t *drop_type)
@@ -1593,7 +1593,7 @@ static void Move_Chasing_Enemies(uint16_t player_x, uint16_t player_y,
     uint8_t speed = 0;
 
     if (is_monster[i] || is_samurai[i]) {
-      // 怪物和武士：向主角靠近
+      // Monsters and samurai: chase toward player
       speed = is_monster[i] ? MONSTER_CHASE_SPEED : SAMURAI_CHASE_SPEED;
       if (player_x > oldx) dx = 1;
       else if (player_x < oldx) dx = -1;
@@ -1601,42 +1601,42 @@ static void Move_Chasing_Enemies(uint16_t player_x, uint16_t player_y,
       else if (player_y < oldy) dy = -1;
     }
     else if (is_wizard[i]) {
-      // 法师：保持距离
+      // Wizard: keep distance
       speed = WIZARD_KEEP_DISTANCE_SPEED;
       int16_t dist_x = (int16_t)player_x - (int16_t)oldx;
       int16_t dist_y = (int16_t)player_y - (int16_t)oldy;
       int32_t distance_sq = (int32_t)dist_x * dist_x + (int32_t)dist_y * dist_y;
-      uint16_t keep_distance = 60; // 保持60像素距离
+      uint16_t keep_distance = 60; // keep 60 pixels away
 
       if (distance_sq < keep_distance * keep_distance) {
-        // 太近了，向远离主角的方向移动
+        // Too close, move away from player
         if (dist_x > 0) dx = -1;
         else if (dist_x < 0) dx = 1;
         if (dist_y > 0) dy = -1;
         else if (dist_y < 0) dy = 1;
       }
       else if (distance_sq > (keep_distance + 20) * (keep_distance + 20)) {
-        // 太远了，向主角靠近
+        // Too far, move toward player
         if (player_x > oldx) dx = 1;
         else if (player_x < oldx) dx = -1;
         if (player_y > oldy) dy = 1;
         else if (player_y < oldy) dy = -1;
       }
-      // 距离合适时不移动
+      // No movement when distance is appropriate
     }
     else if (is_ninja[i]) {
-      // 忍者：随机移动
+      // Ninja: random movement
       speed = NINJA_RANDOM_SPEED;
       uint8_t rand_dir = Random_U16(8);
       switch (rand_dir) {
-        case 0: dx = 1; break;   // 东
-        case 1: dx = -1; break;  // 西
-        case 2: dy = 1; break;   // 南
-        case 3: dy = -1; break;  // 北
-        case 4: dx = 1; dy = 1; break;   // 东南
-        case 5: dx = 1; dy = -1; break;  // 东北
-        case 6: dx = -1; dy = 1; break;  // 西南
-        case 7: dx = -1; dy = -1; break; // 西北
+        case 0: dx = 1; break;   // east
+        case 1: dx = -1; break;  // west
+        case 2: dy = 1; break;   // south
+        case 3: dy = -1; break;  // north
+        case 4: dx = 1; dy = 1; break;   // southeast
+        case 5: dx = 1; dy = -1; break;  // northeast
+        case 6: dx = -1; dy = 1; break;  // southwest
+        case 7: dx = -1; dy = -1; break; // northwest
       }
     }
 
@@ -1653,13 +1653,13 @@ static void Move_Chasing_Enemies(uint16_t player_x, uint16_t player_y,
     if ((uint16_t)nx == oldx && (uint16_t)ny == oldy) continue;
     if (Area_Overlaps_Player((uint16_t)nx, (uint16_t)ny, radius, player_x, player_y)) continue;
 
-    // 擦除旧位置
+    // Erase old position
     if (is_wizard[i]) LCD_Draw_Wizard(oldx, oldy, 1);
     else if (is_monster[i]) LCD_Draw_Monster(oldx, oldy, 1);
     else if (is_ninja[i]) LCD_Draw_Ninja(oldx, oldy, 1);
     else if (is_samurai[i]) {
       LCD_Draw_Samurai(oldx, oldy, 1);
-      // 额外擦除以防止拖影
+      // Extra erase to prevent ghosting
       LCD_Draw_Rect(oldx - SAMURAI_WIDTH/2 - 1, oldy - SAMURAI_HEIGHT/2 - 1, SAMURAI_WIDTH + 2, SAMURAI_HEIGHT + 2, COLOR_BG, 1);
     }
 
@@ -1667,7 +1667,7 @@ static void Move_Chasing_Enemies(uint16_t player_x, uint16_t player_y,
     target_x[i] = (uint16_t)nx;
     target_y[i] = (uint16_t)ny;
 
-    // 绘制新位置
+    // Draw new position
     if (is_wizard[i]) LCD_Draw_Wizard(target_x[i], target_y[i], 0);
     else if (is_monster[i]) LCD_Draw_Monster(target_x[i], target_y[i], 0);
     else if (is_ninja[i]) LCD_Draw_Ninja(target_x[i], target_y[i], 0);
@@ -1675,7 +1675,7 @@ static void Move_Chasing_Enemies(uint16_t player_x, uint16_t player_y,
   }
 }
 
-// ===== 更新并绘制弹丸 =====
+// ===== Update and draw projectiles =====
 void Update_And_Draw_Projectiles(Projectile_t *projs, uint16_t *target_x, uint16_t *target_y,
                                  uint8_t *is_wizard, uint8_t *is_monster, uint8_t *is_ninja, uint8_t *is_samurai,
                                  uint8_t *target_hp, uint16_t player_x, uint16_t player_y, uint16_t *player_hp, uint16_t *player_max_hp, uint16_t *score, uint8_t *active_enemies,
@@ -1684,7 +1684,7 @@ void Update_And_Draw_Projectiles(Projectile_t *projs, uint16_t *target_x, uint16
   for (int i = 0; i < MAX_PROJECTILES; i++) {
     if (!projs[i].active) continue;
 
-    // 擦除旧弹丸
+    // Erase old projectile
     if (projs[i].is_triangle) {
       LCD_Draw_Triangle(projs[i].x, projs[i].y, TRIANGLE_PROJECTILE_SIZE, COLOR_BG, 1);
     } else {
@@ -1703,9 +1703,9 @@ void Update_And_Draw_Projectiles(Projectile_t *projs, uint16_t *target_x, uint16
       continue;
     }
 
-    // 检查敌人弹丸与主角的碰撞
+    // Check enemy projectile collision with player
     if (projs[i].is_enemy && Circles_Overlap(projs[i].x, projs[i].y, proj_radius, player_x, player_y, PLAYER_COLLISION_RADIUS)) {
-      // 擦除弹丸当前位置
+      // Erase projectile at current position
       if (projs[i].is_triangle) {
         LCD_Draw_Triangle(projs[i].x, projs[i].y, TRIANGLE_PROJECTILE_SIZE, COLOR_BG, 1);
       } else {
@@ -1717,7 +1717,7 @@ void Update_And_Draw_Projectiles(Projectile_t *projs, uint16_t *target_x, uint16
       continue;
     }
 
-    // 绘制新弹丸
+    // Draw new projectile
     uint8_t proj_color = projs[i].is_boss ? COLOR_BOSS_PROJECTILE : COLOR_ENEMY_PROJECTILE;
     if (projs[i].is_triangle) {
       LCD_Draw_Triangle(projs[i].x, projs[i].y, TRIANGLE_PROJECTILE_SIZE, proj_color, 0);
@@ -1757,7 +1757,7 @@ void Update_And_Draw_Projectiles(Projectile_t *projs, uint16_t *target_x, uint16
             else if (is_samurai[j]) LCD_Draw_Samurai(target_x[j], target_y[j], 1);
             else LCD_Draw_Circle(target_x[j], target_y[j], TARGET_RADIUS, COLOR_BG, 1);
 
-            // 击杀得分
+            // Kill score
             if (is_monster[j]) {
               *score += 1;
             } else if (is_wizard[j]) {
@@ -1769,7 +1769,7 @@ void Update_And_Draw_Projectiles(Projectile_t *projs, uint16_t *target_x, uint16
             uint16_t kill_x = target_x[j];
             uint16_t kill_y = target_y[j];
 
-            // 清除敌人
+            // Clear enemy
             is_wizard[j] = 0;
             is_monster[j] = 0;
             is_ninja[j] = 0;
@@ -1779,16 +1779,16 @@ void Update_And_Draw_Projectiles(Projectile_t *projs, uint16_t *target_x, uint16
             target_y[j] = 0;
             (*active_enemies)--;
 
-            // 可能生成掉落
+            // Possibly spawn drop
             Spawn_Drop(kill_x, kill_y, drop_active, drop_x, drop_y, drop_type);
 
-            // 击杀奖励：主角血量+10，按照当前血量上限恢复
+            // Kill reward: player HP +10, restored according to current max HP
             if (*player_hp < *player_max_hp) {
               *player_hp += 10;
               if (*player_hp > *player_max_hp) *player_hp = *player_max_hp;
             }
           }
-          // 擦除弹丸当前位置
+          // Erase projectile at current position
           LCD_Draw_Circle(projs[i].x, projs[i].y, PROJECTILE_RADIUS, COLOR_BG, 1);
         }
         projs[i].active = 0;
@@ -1798,7 +1798,7 @@ void Update_And_Draw_Projectiles(Projectile_t *projs, uint16_t *target_x, uint16
   }
 }
 
-// ===== 碰撞检测 =====
+// ===== Collision detection =====
 uint8_t Circles_Overlap(uint16_t x1, uint16_t y1, uint16_t r1,
                         uint16_t x2, uint16_t y2, uint16_t r2) {
   int32_t dx = (int32_t)x2 - (int32_t)x1;
@@ -1808,8 +1808,8 @@ uint8_t Circles_Overlap(uint16_t x1, uint16_t y1, uint16_t r1,
   return dist <= sumr * sumr;
 }
 
-// ===== 绘制函数 =====
-// 玩家像素小人绘制（蓝色主体 + 白色腰带 + 白色头带 + 肤色头手）
+// ===== Drawing functions =====
+// Player pixel character drawing (blue body + white belt + white headband + skin tone head/hands)
 void LCD_Draw_Player(uint16_t x, uint16_t y, uint8_t erase) {
   int16_t bx = x - PLAYER_WIDTH/2;
   int16_t by = y - PLAYER_HEIGHT/2;
@@ -1823,7 +1823,7 @@ void LCD_Draw_Player(uint16_t x, uint16_t y, uint8_t erase) {
   LCD_Draw_Rect(bx+9, by+6,2,2, COLOR_PLAYER_HEAD,1);
 }
 
-// 法师绘制（红色长袍 + 绿色排扣 + 黄色帽子 + 权杖）
+// Wizard drawing (red robe + green buttons + yellow hat + staff)
 void LCD_Draw_Wizard(uint16_t x, uint16_t y, uint8_t erase) {
   int16_t bx = x - WIZARD_WIDTH/2;
   int16_t by = y - WIZARD_HEIGHT/2;
@@ -1834,7 +1834,7 @@ void LCD_Draw_Wizard(uint16_t x, uint16_t y, uint8_t erase) {
   LCD_Draw_Rect(bx+3, by+14,8,2, COLOR_WIZARD_HAT,1);
 }
 
-// 绿色触手怪物绘制（绿色藤蔓 + 红色花 + 黄色眼睛）
+// Green tentacle monster drawing (green vines + red flower + yellow eyes)
 void LCD_Draw_Monster(uint16_t x, uint16_t y, uint8_t erase) {
   int16_t bx = x - MONSTER_WIDTH/2;
   int16_t by = y - MONSTER_HEIGHT/2;
@@ -1845,52 +1845,52 @@ void LCD_Draw_Monster(uint16_t x, uint16_t y, uint8_t erase) {
   LCD_Draw_Rect(bx+10,by+6,2,2, COLOR_MONSTER_EYE,1);
 }
 
-// 忍者绘制（黑色衣服 + 白色腰带 + 黄色鞋 + 白色眼睛）
+// Ninja drawing (black clothes + white belt + yellow shoes + white eyes)
 void LCD_Draw_Ninja(uint16_t x, uint16_t y, uint8_t erase) {
   int16_t bx = x - NINJA_WIDTH/2;
   int16_t by = y - NINJA_HEIGHT/2;
   if (erase) { LCD_Draw_Rect(bx-2, by-2, NINJA_WIDTH+4, NINJA_HEIGHT+4, COLOR_BG, 1); return; }
 
-  // 黑色头套与身体
+  // Black hood and body
   LCD_Draw_Rect(bx+3, by+1, 8, 6, COLOR_NINJA_CLOTH, 1);
   LCD_Draw_Rect(bx+2, by+7, 10, 9, COLOR_NINJA_CLOTH, 1);
 
-  // 白色腰带
+  // White belt
   LCD_Draw_Rect(bx+3, by+10, 8, 2, COLOR_NINJA_BELT, 1);
 
-  // 黄色鞋子
+  // Yellow shoes
   LCD_Draw_Rect(bx+3, by+15, 3, 2, COLOR_NINJA_SHOE, 1);
   LCD_Draw_Rect(bx+8, by+15, 3, 2, COLOR_NINJA_SHOE, 1);
 
-  // 白色眼睛（露出部分）
+  // White eyes (exposed part)
   LCD_Draw_Rect(bx+5, by+4, 2, 1, COLOR_NINJA_EYE, 1);
   LCD_Draw_Rect(bx+7, by+4, 2, 1, COLOR_NINJA_EYE, 1);
 }
 
-// 日本武士绘制（红色黄色盔甲，带角头盔，手持长刀）
+// Japanese samurai drawing (red-yellow armor, horned helmet, holding long blade)
 void LCD_Draw_Samurai(uint16_t x, uint16_t y, uint8_t erase) {
   int16_t bx = x - SAMURAI_WIDTH/2;
   int16_t by = y - SAMURAI_HEIGHT/2;
   if (erase) { LCD_Draw_Rect(bx-3, by-3, SAMURAI_WIDTH+6, SAMURAI_HEIGHT+6, COLOR_BG, 1); return; }
 
-  // 头盔（带角）
+  // Helmet (with horns)
   LCD_Draw_Rect(bx+4, by+1, 8, 5, COLOR_SAMURAI_HELM, 1);
   LCD_Draw_Rect(bx+6, by, 4, 2, COLOR_SAMURAI_ACCENT, 1);
 
-  // 头部
+  // Head
   LCD_Draw_Rect(bx+5, by+5, 6, 4, COLOR_PLAYER_HEAD, 1);
 
-  // 红色与黄色相间盔甲
+  // Red and yellow interleaved armor
   LCD_Draw_Rect(bx+3, by+8, 10, 8, COLOR_SAMURAI_ARMOR, 1);
   LCD_Draw_Rect(bx+4, by+9, 2, 6, COLOR_SAMURAI_ACCENT, 1);
   LCD_Draw_Rect(bx+8, by+9, 2, 6, COLOR_SAMURAI_ACCENT, 1);
 
-  // 手臂与刀
+  // Arms and blade
   LCD_Draw_Rect(bx+1, by+9, 3, 4, COLOR_SAMURAI_ARMOR, 1);
   LCD_Draw_Rect(bx+12, by+10, 4, 2, COLOR_SAMURAI_BLADE, 1);
   LCD_Draw_Rect(bx+13, by+9, 2, 4, COLOR_SAMURAI_ARMOR, 1);
 
-  // 腿部
+  // Legs
   LCD_Draw_Rect(bx+4, by+15, 4, 3, COLOR_SAMURAI_ARMOR, 1);
   LCD_Draw_Rect(bx+8, by+15, 4, 3, COLOR_SAMURAI_ARMOR, 1);
 }
@@ -1903,48 +1903,48 @@ void LCD_Draw_King(uint16_t x, uint16_t y, uint8_t erase) {
     return;
   }
 
-  // 黄色王冠
+  // Yellow crown
   LCD_Draw_Rect(bx+3, by,   10, 4, COLOR_SAMURAI_ACCENT, 1);
   LCD_Draw_Rect(bx+5, by-2, 6,  3, COLOR_SAMURAI_ACCENT, 1);
   LCD_Draw_Rect(bx+7, by-3, 2,  2, COLOR_TARGET_YELLOW, 1);
 
-  // 头部
+  // Head
   LCD_Draw_Rect(bx+5, by+3, 6, 5, COLOR_PLAYER_HEAD, 1);
 
-  // 红色王袍
+  // Red royal robe
   LCD_Draw_Rect(bx+2, by+7, 12, 10, COLOR_SAMURAI_ARMOR, 1);
 
-  // 绿色裤子
+  // Green pants
   LCD_Draw_Rect(bx+3, by+15, 5, 5, COLOR_MONSTER_VINE, 1);
   LCD_Draw_Rect(bx+8, by+15, 5, 5, COLOR_MONSTER_VINE, 1);
 
-  // 腰带装饰
+  // Belt decoration
   LCD_Draw_Rect(bx+3, by+12, 10, 2, COLOR_NINJA_BELT, 1);
 
-  // 手臂
+  // Arms
   LCD_Draw_Rect(bx+1,  by+8, 3, 5, COLOR_SAMURAI_ARMOR, 1);
   LCD_Draw_Rect(bx+12, by+8, 3, 5, COLOR_SAMURAI_ARMOR, 1);
 
-  // 权杖
+  // Scepter
   LCD_Draw_Rect(bx+14, by+7, 2, 8, COLOR_PLAYER_BELT, 1);
   LCD_Draw_Rect(bx+13, by+5, 4, 3, COLOR_SAMURAI_ACCENT, 1);
 
-  // 鞋子
+  // Shoes
   LCD_Draw_Rect(bx+3,  by+19, 4, 2, COLOR_NINJA_CLOTH, 1);
   LCD_Draw_Rect(bx+9,  by+19, 4, 2, COLOR_NINJA_CLOTH, 1);
 }
 
-// 掩体绘制（白色箱子）
-// 三角形弹丸绘制（蓝色小三角形）
+// Cover drawing (white box)
+// Triangle projectile drawing (small blue triangle)
 void LCD_Draw_Triangle(uint16_t x, uint16_t y, uint8_t size, uint8_t color, uint8_t erase) {
   if (erase) color = COLOR_BG;
-  // 绘制一个向上的小三角形
+  // Draw a small upward-pointing triangle
   for (int i = 0; i < size; i++) {
     LCD_Draw_Line(x - i, y + i, x + i, y + i, color);
   }
 }
 
-// ===== Place_Target 已修复 =====
+// ===== Place_Target has been fixed =====
 void Place_Target(uint8_t index,
                   uint16_t *target_x, uint16_t *target_y,
                   uint8_t *is_wizard, uint8_t *is_monster, uint8_t *is_ninja, uint8_t *is_samurai,
@@ -1964,7 +1964,7 @@ void Place_Target(uint8_t index,
     uint8_t collision = 0;
     for (uint8_t i = 0; i < TARGET_COUNT; i++) {
       if (i == index) continue;
-      // 只检查活跃敌人的碰撞
+      // Only check active enemies for collision
       if (!is_wizard[i] && !is_monster[i] && !is_ninja[i] && !is_samurai[i]) continue;
 
       uint8_t this_wizard = is_wizard[i];
